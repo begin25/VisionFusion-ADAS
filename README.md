@@ -12,7 +12,7 @@ The project combines real-time object detection, multi-object tracking, monocula
 
 ## Demo Video
 
-(https://youtu.be/VMLkfBw-CnQ)
+https://youtu.be/VMLkfBw-CnQ
 
 The demo demonstrates:
 
