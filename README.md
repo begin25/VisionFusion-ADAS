@@ -1,130 +1,95 @@
 # VisionFusion ADAS
 
-A monocular vision-based Advanced Driver Assistance System (ADAS) that combines real-time object detection, multi-object tracking, monocular depth estimation, and Time-To-Collision (TTC) analysis to assess collision risk in highway driving scenarios.
+### Monocular Vision-Based Collision Risk Assessment using YOLOv8, MiDaS, Tracking, and Time-To-Collision Estimation
 
-The system uses a single RGB camera feed and does not require LiDAR, radar, stereo cameras, or specialized hardware.
+![VisionFusion Demo](assets/visionfusion_demo.png)
 
----
+**VisionFusion ADAS** is a computer vision system that transforms a standard monocular camera into a lightweight Advanced Driver Assistance System (ADAS).
 
-## Overview
-
-Traditional object detection systems can identify vehicles in a scene but cannot determine how far they are from the camera or whether they pose an immediate collision risk.
-
-This project extends a standard YOLO-based detection pipeline by integrating:
-
-* YOLOv8 for vehicle detection and tracking
-* MiDaS for monocular depth estimation
-* Temporal tracking for motion analysis
-* Time-To-Collision (TTC) estimation
-* EMA-based smoothing for stable risk assessment
-
-The result is a lightweight perception system capable of estimating relative vehicle distance, approach velocity, and collision risk using only a single camera stream.
+The project combines real-time object detection, multi-object tracking, monocular depth estimation, and Time-To-Collision (TTC) analysis to estimate collision risk in highway driving scenarios without requiring LiDAR, radar, stereo cameras, or specialized hardware.
 
 ---
 
-## Problem Statement
+## Demo Video
 
-A common mistake in simple collision warning systems is assuming that larger bounding boxes imply greater danger.
+https://github.com/yourusername/VisionFusion-ADAS/assets/demo.mp4
 
-This assumption suffers from scale ambiguity:
+The demo demonstrates:
 
-* A large truck far away may occupy a large image region.
-* A motorcycle much closer may occupy a smaller image region.
-* Bounding box size alone does not reliably represent real-world distance.
-
-The initial version of this project used YOLO detections and bounding-box area thresholds to estimate risk. This approach frequently produced incorrect warnings because it lacked depth perception.
-
-VisionFusion addresses this limitation by combining object detection with monocular depth estimation.
-
----
-
-## System Architecture
-
-### 1. Object Detection & Tracking
-
-YOLOv8 detects highway vehicles and assigns persistent track IDs across frames.
-
-Target classes:
-
-| Class      | COCO ID |
-| ---------- | ------- |
-| Car        | 2       |
-| Motorcycle | 3       |
-| Bus        | 5       |
-| Truck      | 7       |
-
-Tracking allows the system to maintain object identity over time and estimate relative motion.
+* Real-time vehicle detection
+* Persistent object tracking
+* Monocular depth estimation
+* Time-To-Collision prediction
+* Dynamic collision-risk assessment
+* Live depth radar visualization
 
 ---
 
-### 2. Monocular Depth Estimation
+## Motivation
 
-MiDaS Small generates a dense depth map from each RGB frame.
+Traditional object detection systems can identify vehicles but cannot determine how far they are from the camera or whether they pose an immediate collision threat.
 
-Instead of predicting absolute metric distance, MiDaS estimates relative scene depth.
+My initial implementation relied solely on YOLO detections and bounding-box size to estimate danger. This approach suffered from a fundamental limitation:
 
-The depth map is transformed into a pseudo-distance representation and queried inside each detected vehicle bounding box.
+### Scale Ambiguity
 
-For each vehicle:
+A large truck far away may occupy a larger image region than a nearby motorcycle.
 
-* Depth pixels inside the box are extracted
-* Median depth is computed
-* The value is used as a relative distance estimate
+As a result, bounding-box size alone is not a reliable indicator of collision risk.
 
----
-
-### 3. Time-To-Collision (TTC)
-
-For every tracked object:
-
-Approach Velocity = Change in Distance / Change in Time
-
-TTC = Current Distance / Approach Velocity
-
-A lower TTC indicates a higher collision risk.
-
-This provides a physically meaningful warning metric compared to bounding-box size alone.
+To address this problem, VisionFusion introduces a depth-aware perception pipeline that combines object detection, monocular depth estimation, and temporal reasoning.
 
 ---
 
-### 4. EMA-Based Stability Layer
+## Key Features
 
-One challenge encountered during development was instability in warning predictions.
+### Vehicle Detection
 
-Sources of noise included:
+* YOLOv8 Nano
+* Real-time inference
+* Vehicle-specific filtering
+* Cars
+* Motorcycles
+* Buses
+* Trucks
 
-* Bounding box jitter between frames
-* Depth-map fluctuations
-* Small timing variations producing large velocity spikes
+### Multi-Object Tracking
 
-These effects caused warning boxes to rapidly switch between SAFE, WARNING, and CRITICAL states.
+Persistent object IDs are maintained across frames using YOLO tracking mode.
 
-To solve this, an Exponential Moving Average (EMA) filter was introduced.
+Tracking enables:
 
-#### Distance Smoothing
+* Motion estimation
+* Relative velocity computation
+* Time-To-Collision analysis
 
-The measured depth is blended with historical depth estimates.
+### Monocular Depth Estimation
 
-#### Velocity Smoothing
+MiDaS Small generates a dense depth map from a single RGB image.
 
-Approach velocity is smoothed independently to suppress extreme spikes.
+The system extracts depth information within each detected vehicle bounding box to estimate relative distance from the ego vehicle.
 
-This produces:
+### Time-To-Collision (TTC)
 
-* Stable TTC estimates
-* Reduced false alarms
-* Consistent risk visualization
-* Improved user experience
+Collision risk is estimated using:
 
----
+TTC = Distance / Relative Approach Velocity
 
-## Risk Classification
+Rather than relying on object size, the system evaluates how quickly the distance between vehicles is shrinking.
 
-| Level    | Condition                           |
-| -------- | ----------------------------------- |
-| Safe     | TTC ≥ 6 s and sufficient distance   |
-| Warning  | TTC < 6 s or moderate proximity     |
-| Critical | TTC < 3 s or extremely close object |
+### Live Depth Radar
+
+A picture-in-picture depth visualization displays the scene's estimated depth structure in real time.
+
+### Collision Risk Assessment
+
+Objects are categorized into three risk levels:
+
+| Risk Level | Condition |
+| ---------- | --------- |
+| Safe       | TTC ≥ 6 s |
+| Warning    | TTC < 6 s |
+| Critical   | TTC < 3 s |
 
 Visual indicators:
 
@@ -134,23 +99,80 @@ Visual indicators:
 
 ---
 
-## Visual Output
+## Engineering Challenge: The "Disco Box" Problem
 
-Each processed frame contains:
+After integrating YOLO and MiDaS, a new issue emerged.
 
-* Vehicle detections
-* Persistent tracking IDs
-* Estimated depth values
-* Time-To-Collision estimates
-* Collision risk visualization
-* Processing latency statistics
-* Live MiDaS depth radar (picture-in-picture)
+Bounding boxes frequently oscillated between risk levels despite the scene appearing stable.
+
+Root causes included:
+
+* Bounding-box jitter
+* Noisy depth estimates
+* Small frame-to-frame timing variations
+* Velocity spikes caused by depth fluctuations
+
+This produced unstable warnings and poor user experience.
+
+---
+
+## Solution: EMA-Based Temporal Stabilization
+
+To suppress noisy measurements, an Exponential Moving Average (EMA) filter was introduced.
+
+### Distance Smoothing
+
+Depth measurements are blended with historical estimates.
+
+### Velocity Smoothing
+
+Relative velocity estimates are independently smoothed to prevent extreme TTC spikes.
+
+Benefits:
+
+* Stable warning boxes
+* Reduced false alarms
+* Consistent TTC estimation
+* Improved visual clarity
+* Better temporal robustness
+
+This stabilization layer represents the final iteration of the project.
+
+---
+
+## System Architecture
+
+### Stage 1: Object Detection & Tracking
+
+YOLOv8 identifies vehicles and assigns persistent track IDs.
+
+### Stage 2: Depth Estimation
+
+MiDaS generates a dense monocular depth map.
+
+### Stage 3: Sensor Fusion
+
+Detected vehicle regions are mapped onto the depth image.
+
+Median depth values are extracted for each tracked object.
+
+### Stage 4: Temporal Analysis
+
+Historical depth measurements are used to estimate approach velocity.
+
+### Stage 5: Time-To-Collision Estimation
+
+TTC is computed using relative distance and closing speed.
+
+### Stage 6: Risk Visualization
+
+Objects are color-coded based on collision risk.
 
 ---
 
 ## Project Evolution
 
-### Version 1: YOLO-Based Collision Warning
+### Version 1 — YOLO-Based Collision Warning
 
 Features:
 
@@ -159,35 +181,46 @@ Features:
 * Bounding-box area heuristic
 * FPS monitoring
 
-Limitation:
+Limitations:
 
-Collision risk was inferred solely from box size, leading to unreliable warnings.
+* No depth perception
+* No tracking
+* Frequent false warnings
+* Scale ambiguity problem
 
 ---
 
-### Version 2: VisionFusion
+### Version 2 — VisionFusion
 
-Enhancements:
+Added:
 
-* Monocular depth estimation
+* MiDaS depth estimation
 * Multi-object tracking
 * TTC computation
-* Relative motion analysis
 * Depth radar visualization
+
+Result:
+
+* Spatial awareness
+* Motion understanding
+* More realistic collision assessment
 
 ---
 
-### Version 3: VisionFusion (Smoothed)
+### Version 3 — VisionFusion (Final)
 
-Additional Improvements:
+Added:
 
-* EMA depth smoothing
+* EMA distance smoothing
 * EMA velocity smoothing
-* Reduced detector jitter
 * Stable TTC estimates
-* Consistent risk classification
+* Robust warning visualization
 
-This version represents the final implementation contained in this repository.
+Result:
+
+* Significantly improved stability
+* Reduced warning oscillations
+* Better user experience
 
 ---
 
@@ -207,7 +240,7 @@ This version represents the final implementation contained in this repository.
 Clone the repository:
 
 ```bash
-git clone https://github.com/<username>/VisionFusion-ADAS.git
+git clone https://github.com/yourusername/VisionFusion-ADAS.git
 cd VisionFusion-ADAS
 ```
 
@@ -219,64 +252,63 @@ pip install torch torchvision opencv-python numpy ultralytics
 
 ---
 
-## Running the Project
+## Run
 
 ```bash
 python visionfusion_engine_smoothed.py
 ```
 
-The required YOLOv8 and MiDaS model weights will be downloaded automatically during first execution.
+Model weights will be downloaded automatically during the first execution.
 
 ---
 
 ## Limitations
 
-This project is a research prototype and not a production-grade ADAS.
-
-Current limitations include:
-
-* Monocular depth estimation provides relative depth rather than calibrated metric distance.
-* Performance degrades under poor lighting, rain, fog, or heavy occlusion.
-* TTC assumes smooth motion between frames.
+* Monocular depth is relative rather than metric.
+* Performance may degrade in poor lighting conditions.
+* TTC assumes smooth object motion.
 * Detection is limited to selected vehicle classes.
-* Depth estimates may become noisy for unusual scenes.
-* Processing speed depends heavily on available GPU resources.
+* Real-world deployment would require calibrated sensors and extensive validation.
 
 ---
 
-## Future Improvements
-
-Potential extensions include:
+## Future Work
 
 * Metric depth calibration
-* Lane detection integration
+* Lane detection
 * Sensor fusion with radar or LiDAR
 * Vehicle trajectory prediction
 * Driver alert generation
-* Object segmentation
-* Multi-camera perception
-* Real-time deployment optimization
+* Edge-device optimization
+* Real-time deployment
 
 ---
 
-## Educational Value
+## Results
 
-This project demonstrates how modern perception systems can combine:
+The final system provides:
 
-* Semantic understanding (YOLO)
-* Spatial understanding (MiDaS)
-* Temporal reasoning (Tracking)
-* Physics-based risk estimation (TTC)
+* Semantic understanding through object detection
+* Spatial understanding through depth estimation
+* Temporal understanding through tracking
+* Physics-based collision prediction through TTC
 
-to move from simple object detection toward a practical autonomous-driving perception pipeline.
+Together, these components transform a standard monocular camera into a lightweight ADAS perception pipeline.
 
 ---
 
 ## Author
 
-Vaibhav Jain
-Mechanical Engineering, IIT Delhi
+**Vaibhav Jain**
+
+B.Tech, Mechanical Engineering
+Indian Institute of Technology Delhi
 
 Interests:
-Computer Vision, Autonomous Systems, Machine Learning, and AI for Real-World Applications.
 
+* Computer Vision
+* Autonomous Systems
+* Machine Learning
+* Robotics
+* AI for Transportation
+* Robotics
