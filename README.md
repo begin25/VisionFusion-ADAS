@@ -286,14 +286,44 @@ Model weights will be downloaded automatically during the first execution.
 
 ## Results
 
-The final system provides:
+Evaluated on 1,800 frames (60 seconds) of highway dashcam footage, CPU-only (no GPU).
 
-* Semantic understanding through object detection
-* Spatial understanding through depth estimation
-* Temporal understanding through tracking
-* Physics-based collision prediction through TTC
+### System Performance
 
-Together, these components transform a standard monocular camera into a lightweight ADAS perception pipeline.
+| Metric | Value |
+|---|---|
+| Total frames processed | 1,800 |
+| Mean latency | 134.1 ms |
+| P95 latency | 163.7 ms |
+| Latency IQR | 28.0 ms (highly consistent) |
+| Effective throughput | 7.5 FPS |
+
+### Detection and Tracking
+
+| Metric | Value |
+|---|---|
+| Unique vehicles tracked | 280 |
+| Average simultaneous trackers | 7.3 per frame |
+| Longest persistent track | 1,109 frames (~37 seconds) |
+| Frames with zero detections | 0 of 1,800 |
+| Frames tracking 5+ vehicles simultaneously | 1,501 of 1,800 (83.4%) |
+
+### Risk Classification
+
+Across all vehicle detections:
+
+| Risk Level | Avg vehicles/frame | % of detections |
+|---|---|---|
+| 🟢 Safe | 5.71 | 78.8% |
+| 🟠 Warning | 1.22 | 16.8% |
+| 🔴 Critical | 0.32 | 4.4% |
+
+### Model Reference
+
+| Model | Detail |
+|---|---|
+| YOLOv8n | COCO mAP@50: 52.3% (pretrained baseline) |
+| MiDaS Small | Intel ISL, zero-shot monocular depth |
 
 ---
 
@@ -301,7 +331,7 @@ Together, these components transform a standard monocular camera into a lightwei
 
 **Vaibhav Jain**
 
-B.Tech, Mechanical Engineering
+B.Tech, Production & Industrial Engineering
 Indian Institute of Technology Delhi
 
 Interests:
@@ -311,4 +341,3 @@ Interests:
 * Machine Learning
 * Robotics
 * AI for Transportation
-* Robotics
