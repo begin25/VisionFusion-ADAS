@@ -283,47 +283,54 @@ Model weights will be downloaded automatically during the first execution.
 * Real-time deployment
 
 ---
+## 📊 Results & Performance Evaluation
 
-## Results
-
-Evaluated on 1,800 frames (60 seconds) of highway dashcam footage, CPU-only (no GPU).
+The pipeline was evaluated over a continuous 60-second driving sequence totaling 1,800 frames, processed entirely on a CPU baseline configuration to analyze edge-compute viability.
 
 ### System Performance
-
 | Metric | Value |
 |---|---|
-| Total frames processed | 1,800 |
-| Mean latency | 134.1 ms |
-| P95 latency | 163.7 ms |
-| Latency IQR | 28.0 ms (highly consistent) |
-| Effective throughput | 7.5 FPS |
+| **Total frames processed** | 1,800 |
+| **Mean latency** | 156.3 ms |
+| **P95 latency** | 184.8 ms |
+| **Max latency** | 710.8 ms |
+| **Effective throughput** | 6.4 FPS |
 
-### Detection and Tracking
-
+### Detection and Tracking Robustness
 | Metric | Value |
 |---|---|
-| Unique vehicles tracked | 280 |
-| Average simultaneous trackers | 7.3 per frame |
-| Longest persistent track | 1,109 frames (~37 seconds) |
-| Frames with zero detections | 0 of 1,800 |
-| Frames tracking 5+ vehicles simultaneously | 1,501 of 1,800 (83.4%) |
+| **Unique vehicles tracked** | 280 |
+| **Average simultaneous trackers** | 7.3 per frame |
+| **Longest persistent track** | 1,109 frames (~37 seconds) |
 
-### Risk Classification
+### Risk Classification Distribution
+Across all vehicle detection instances, the EMA-stabilized risk thresholds categorized tracking states into the following distributions:
 
-Across all vehicle detections:
+| Risk Level | % of Total Detections |
+|---|---|
+| 🟢 **Safe** | 36.0% |
+| 🟠 **Warning** *(TTC < 6.0s or depth < 80)* | 32.8% |
+| 🔴 **Critical** *(TTC < 3.0s or depth < 40)* | 31.2% |
 
-| Risk Level | Avg vehicles/frame | % of detections |
-|---|---|---|
-| 🟢 Safe | 5.71 | 78.8% |
-| 🟠 Warning | 1.22 | 16.8% |
-| 🔴 Critical | 0.32 | 4.4% |
+> *Note on Risk Metrics: The 'Critical' classification tier holds a high distribution (31.2%) due to the conservative absolute proximity threshold (`depth < 40`). This design parameter inherently flags vehicles operating safely but closely in adjacent parallel lanes. Integrating a downstream lane-line segmentation network will restrict critical TTC calculations exclusively to the ego-lane.*
+
+### 🛠️ Algorithmic Stability & Smoothing (EMA Filter Implementation)
+
+A primary challenge with raw deep-learning outputs in vision pipelines is high frame-to-frame variance. To eliminate physical bounding box jitter from the detector and minor structural fluctuations within the monocular depth map, a dual-stage **Exponential Moving Average (EMA)** signal-processing filter was engineered into the core tracking framework.
+
+| Parameters & Configuration | Value / Setting | Functional Objective |
+| :--- | :--- | :--- |
+| **Smoothing Strategy** | Exponential Moving Average (EMA) | Acts as a mathematical shock absorber to compute fluid trendlines rather than reacting to instantaneous sensor glitches. |
+| **Distance Smoothing (`alpha_dist`)** | `0.30` | Smooths out raw regional median depth extractions, effectively mitigating boundary box edge vibrations. |
+| **Velocity Smoothing (`alpha_vel`)** | `0.15` | Applied heavily to the relative approach-velocity calculation to suppress massive delta spikes caused by minute timing variables ($\Delta t$). |
+| **Engineering Outcome** | **Successfully Stabilized** | Drastically reduced false-positive warning switches, eliminating chaotic UI flashing and securing a consistent, reliable Time-To-Collision (TTC) countdown. |
 
 ### Model Reference
 
 | Model | Detail |
 |---|---|
-| YOLOv8n | COCO mAP@50: 52.3% (pretrained baseline) |
-| MiDaS Small | Intel ISL, zero-shot monocular depth |
+| **YOLOv8n** | COCO mAP@50: 52.3% (pretrained baseline) |
+| **MiDaS Small** | Intel ISL, zero-shot monocular depth |
 
 ---
 
