@@ -1,0 +1,41 @@
+
+╔══════════════════════════════════════════════════════════╗
+║        VisionFusion ADAS — Metrics Report                ║
+╚══════════════════════════════════════════════════════════╝
+
+  SYSTEM PERFORMANCE
+  ─────────────────────────────────────────────────────────
+  Total frames processed       : 1800
+  Mean latency                 : 156.3 ms
+  P95  latency                 : 184.8 ms
+  Max  latency                 : 710.8 ms
+  Effective FPS                : 6.4
+
+  DETECTION & TRACKING
+  ─────────────────────────────────────────────────────────
+  Unique vehicles tracked      : 280
+  Avg track duration (frames)  : 46.6
+  Longest track (frames)       : 1109
+  Avg active trackers / frame  : 7.3
+
+  RISK DISTRIBUTION  (% of total frames)
+  ─────────────────────────────────────────────────────────
+  🔴 CRITICAL  (TTC < 3s or depth < 40)  : 31.2%
+  🟠 WARNING   (TTC < 6s or depth < 80)  : 32.8%
+  🟢 SAFE                                : 36.0%
+
+  STABILITY & SMOOTHING (EMA Implementation)
+  ─────────────────────────────────────────────────────────
+  Smoothing Strategy           : Exponential Moving Average
+  alpha_dist (Depth)           : 0.30
+  alpha_vel  (Velocity/TTC)    : 0.15
+  Result                       : Signal jitter mitigated; TTC risk
+                                 thresholds stabilized against
+                                 frame-to-frame noise.
+
+  MODEL REFERENCE (pretrained, no fine-tuning)
+  ─────────────────────────────────────────────────────────
+  YOLOv8n  COCO mAP@50          : 52.3%  [Ultralytics baseline]
+  MiDaS_small (Intel ISL)       : zero-shot monocular depth
+
+══════════════════════════════════════════════════════════
