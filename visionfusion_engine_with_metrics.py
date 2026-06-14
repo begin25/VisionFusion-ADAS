@@ -6,9 +6,8 @@ import numpy as np
 from ultralytics import YOLO
 
 
-# ============================================================
-#  MetricsLogger — captures everything needed for your report
-# ============================================================
+#  MetricsLogger — captures everything needed for the report
+
 class MetricsLogger:
     """
     Attached to VisionFusionADAS to collect per-frame and per-track
@@ -32,9 +31,9 @@ class MetricsLogger:
         self.alpha_dist = 0.3
         self.alpha_vel = 0.15
 
-    # ----------------------------------------------------------
+    
     # Called once per frame at the END of frame processing
-    # ----------------------------------------------------------
+    
     def log_frame(self, frame_no, latency_ms, num_trackers,
                   risk_counts: dict):
         """
@@ -50,9 +49,9 @@ class MetricsLogger:
             'safe':          risk_counts.get('SAFE',     0),
         })
 
-    # ----------------------------------------------------------
+    
     # Called once per detected vehicle per frame
-    # ----------------------------------------------------------
+    
     def log_vehicle(self, track_id, raw_dist, smoothed_dist,
                     raw_ttc, smoothed_ttc):
         """
@@ -74,9 +73,9 @@ class MetricsLogger:
         if np.isfinite(smoothed_ttc):
             self.smooth_ttc_log.append(smoothed_ttc)
 
-    # ----------------------------------------------------------
+    
     # Final report — call this after the video loop ends
-    # ----------------------------------------------------------
+    
     def generate_report(self, alpha_dist, alpha_vel, csv_path='frame_log.csv',
                         report_path='metrics_report.txt'):
 
@@ -162,9 +161,9 @@ class MetricsLogger:
         return report
 
 
-# ============================================================
+
 #  VisionFusionADAS — smoothed engine with MetricsLogger
-# ============================================================
+
 class VisionFusionADAS:
     def __init__(self, yolo_model='yolov8n.pt'):
         print("[INFO] Booting VisionFusion Engine (YOLOv8 Tracking + MiDaS)...")
