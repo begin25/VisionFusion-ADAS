@@ -537,12 +537,11 @@ A primary challenge with raw deep-learning outputs in vision pipelines is high f
 **Vaibhav Jain**  
 
 B.Tech, Production & Industrial Engineering  
-Indian Institute of Technology Delhi  
+Indian Institute of Technology, Delhi  
 
 Interests:
 
 * Computer Vision
 * Autonomous Systems
 * Machine Learning
-* Robotics
-* AI for Transportation
+* Mathematical Optimization
