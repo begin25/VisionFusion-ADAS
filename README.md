@@ -457,7 +457,8 @@ Annotated Output Video
               ├── vision_fusion_output.mp4
               ├── results/metrics_report.txt
               └── results/frame_log.csv
-```---
+```
+---
 
 ## Limitations
 
