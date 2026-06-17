@@ -534,10 +534,10 @@ A primary challenge with raw deep-learning outputs in vision pipelines is high f
 
 ## Author
 
-**Vaibhav Jain**
+**Vaibhav Jain**  
 
-B.Tech, Production & Industrial Engineering
-Indian Institute of Technology Delhi
+B.Tech, Production & Industrial Engineering  
+Indian Institute of Technology Delhi  
 
 Interests:
 
